@@ -17,19 +17,19 @@ import ApiResponse from "../utils/ApiResponse.js";
 */
 const registerUser = asynchandler(async (req, res) => {
     // getting User data
-    const { fullName, email, username, password } = req.body
+    const { fullName, email, userName, password } = req.body
     console.log("NAME:", fullName);
 
     // This Validation part is tough to understand
     if (
-        [fullName, username, email, password].some((field) => field?.trim() === "")
+        [fullName, userName, email, password].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All Fields are Required")
     }
 
     // Check user exists or not
-    const existedUser = User.findOne({
-        $or: [{ username }, { email }]
+    const existedUser = await User.findOne({
+        $or: [{ userName }, { email }]
     })
 
     if (existedUser) {
