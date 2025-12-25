@@ -1,7 +1,8 @@
 import asynchandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import ApiResponse from "../utils/ApiResponse.js";
 /* ALGORITHM
     Steps to Register User
     1- Get User Details from frontend
@@ -27,11 +28,11 @@ const registerUser = asynchandler(async (req, res) => {
     }
 
     // Check user exists or not
-    const existedUser= User.findOne({
+    const existedUser = User.findOne({
         $or: [{ username }, { email }]
     })
 
-    if(existedUser){
+    if (existedUser) {
         throw new ApiError(409, "User already exists with given username or email")
     }
 
@@ -41,6 +42,42 @@ const registerUser = asynchandler(async (req, res) => {
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required")
     }
+
+    // Upload to Cloudinary
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    if (!avatar) {
+        throw new ApiError(400, "Avatar is required")
+    }
+
+    // Creating User Object
+    const user = await User.create({
+        fullName,
+        avatar: avatar.url,
+        converImage: coverImage?.url || "",  //Safety measure
+        email,
+        password,
+        userName: userName.toLowerCase()
+    })
+
+    // Removing Passaword etc
+
+    // Fetching created user without password and refresh token 
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    ) // this is a way to exclude fields
+
+    // Check User Creation
+    if (!createdUser) {
+        throw new ApiError(500, "User Registration Failed...Something went wrong")
+    }
+
+    // Sending Response
+    return res.status(201).json(new ApiResponse(
+        200,
+        "User Registered Successfully",
+        createdUser
+    ));
 }
 );
 
