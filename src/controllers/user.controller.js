@@ -14,6 +14,7 @@ import ApiResponse from "../utils/ApiResponse.js";
     7- Remove password and refresh token field from response
     8- Check for user creation
     9- Return response or error if failed
+
 */
 const registerUser = asynchandler(async (req, res) => {
     // getting User data
@@ -86,4 +87,19 @@ const registerUser = asynchandler(async (req, res) => {
 }
 );
 
-export default registerUser;
+/* ALGORITHM
+    Steps to Login User
+    1- Get User Details from frontend req body
+    2- Validate data username or email
+    3- Check if user alredy Exist
+    4- Check Password
+    5- Access and refresh tokens generate
+    6- Send tokens via Cookies 
+    7- Return response or error if failed
+*/
+
+const loginUser = asyncHandler(async (req, res) => {
+
+})
+
+export { registerUser, loginUser };
