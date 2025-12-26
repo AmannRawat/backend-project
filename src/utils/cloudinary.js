@@ -1,11 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 
-console.log("CLOUDINARY ENV:",
-  process.env.CLOUDINARY_CLOUD_NAME,
-  process.env.CLOUDINARY_API_KEY,
-  process.env.CLOUDINARY_API_SECRET
-);
 // Configuration
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -24,7 +19,8 @@ const uploadOnCloudinary = async (localFilePath) => {
             );
         //File uploaded succesfully 
         console.log("File is Uploaded On Cloudinary", response.url);
-        await fs.promises.unlink(localFilePath); //Remove the file from local uploads folder
+        //await fs.promises.unlink(localFilePath); //Remove the file from local uploads folder
+        fs.unlinkSync(localFilePath); //Remove the file from local uploads folder
         return response;
     } catch (err) {
         fs.unlinkSync(localFilePath)//rEMOVES THE LOCALLY SAVED TREMPORARY FILE AS the upload operation got failed
