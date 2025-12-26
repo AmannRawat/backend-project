@@ -3,6 +3,22 @@ import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
+
+
+const generateAccessAndRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(500, "Something Went Wrong While Genrating Refresh and Access Tokens")
+    }
+}
 /* ALGORITHM
     Steps to Register User
     1- Get User Details from frontend
@@ -98,7 +114,37 @@ const registerUser = asynchandler(async (req, res) => {
     7- Return response or error if failed
 */
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser = asynchandler(async (req, res) => {
+    // Get data
+    const { email, userName, password } = req.body;
+
+    // Validate data if given
+    if (!userName || !email) {
+        throw new ApiError(400, "Username or Password is required")
+    }
+
+    // Finding User (await bcz database dusre desh me ho skta hai)
+    const user = await User.findOne({
+        $or: [{ userName }, { email }]
+    });
+
+    //If User Exists
+    if (!user) {
+        throw new ApiError(404, "User Does Not Exist")
+    }
+
+    // Mine methods exist in my instance of user not User of mongoose 
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid user credentials")
+    }
+
+    // Access and refresh tokens generate
+    const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user._id);
+
+    const loggedInUser= await User.findById(user._id).
+    select("-password -refreshToken")
 
 })
 
