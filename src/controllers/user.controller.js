@@ -141,11 +141,25 @@ const loginUser = asynchandler(async (req, res) => {
     }
 
     // Access and refresh tokens generate
-    const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
-    const loggedInUser= await User.findById(user._id).
-    select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).
+        select("-password -refreshToken")
 
+    const options = { // To secure Cookies to not get modified
+        httpOnly: true,
+        secure: true,
+    }
+
+    return res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(200, "User Logged In Successfully",
+            {
+            user: loggedInUser,accessToken, refreshToken //risky to send in json (XSS attack)
+            })
+        );
 })
 
 export { registerUser, loginUser };
