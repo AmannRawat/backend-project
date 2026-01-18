@@ -152,14 +152,38 @@ const loginUser = asynchandler(async (req, res) => {
     }
 
     return res.status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(200, "User Logged In Successfully",
-            {
-            user: loggedInUser,accessToken, refreshToken //risky to send in json (XSS attack)
-            })
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200, "User Logged In Successfully",
+                {
+                    user: loggedInUser, accessToken, refreshToken //risky to send in json (XSS attack)
+                })
         );
 })
 
-export { registerUser, loginUser };
+const logoutUser = asynchandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        },
+        {
+            new: true
+        }
+    );
+
+    const options = { // To secure Cookies to not get modified
+        httpOnly: true,
+        secure: true,
+    }
+
+    return res.status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User Logged Out SuccessFully"))
+})
+
+export { registerUser, loginUser, logoutUser };
