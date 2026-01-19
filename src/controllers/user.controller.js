@@ -116,12 +116,14 @@ const registerUser = asynchandler(async (req, res) => {
 
 const loginUser = asynchandler(async (req, res) => {
     // Get data
+    // throw new Error("LOGIN CONTROLLER HIT");
+
     const { email, userName, password } = req.body;
 
     // Validate data if given
-    if (!userName || !email) {
-        throw new ApiError(400, "Username or Password is required")
-    }
+   if ((!userName && !email) || !password) {
+    throw new ApiError(400, "Username/email and password are required");
+}
 
     // Finding User (await bcz database dusre desh me ho skta hai)
     const user = await User.findOne({
