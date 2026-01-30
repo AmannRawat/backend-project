@@ -5,8 +5,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 
-
 const generateAccessAndRefreshTokens = async (userId) => {
+    // throw new Error("JWT SECRET IS MISSING")
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -20,7 +20,9 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
         return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(500, "Something Went Wrong While Generating Refresh and Access Tokens")
+        // throw new ApiError(500, "Something Went Wrong While Generating Refresh and Access Tokens")
+        console.error("TOKEN ERROR 👉", error);
+        throw new ApiError(500, error.message);
     }
 }
 /* ALGORITHM
@@ -146,6 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid user credentials")
     }
 
+    // throw new ApiError(401, "I")
     // Access and refresh tokens generate
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
@@ -238,3 +241,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 export { registerUser, loginUser, logoutUser, refreshAccessToken };
+
+
+//Issue I faced
+// When working through postman i noticed with i changing code postman still runs older code so after figuring out find out that inpackage.json there was a issue with how index.js is placed adn shown there as in thsi project index.js is in src not root so i have to describe that path to main isnide package.json
