@@ -241,10 +241,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword, confPassword} = req.body;
+    const { oldPassword, newPassword, confPassword } = req.body;
 
-    if(!newPassword===confPassword){
-        throw new ApiError(400,"Password not confirmed");
+    if (!newPassword === confPassword) {
+        throw new ApiError(400, "Password not confirmed");
     }
     const userID = req.user?._id;
     const user = await User.findById(userID);
@@ -260,35 +260,99 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, "Password Changed Successfully", {}));
 })
 
-const getCurrentUser=asyncHandler(async(req,res)=>{
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res
-    .status(200)
-    .json(200,"current user fetched successfully",req.user);
+        .status(200)
+        .json(200, "current user fetched successfully", req.user);
 })
 
-const updateAccountDetails=asyncHandler(async(req,res)=>{
-    const{fullName,email}=req.body;
-    if(!fullName || !email){
-        throw new ApiError(400,"Fields are empty");
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body;
+    if (!fullName || !email) {
+        throw new ApiError(400, "Fields are empty");
     }
 
-    const user= await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set:{
+            $set: {
                 fullName: fullName,
                 email: email
             }
         },
-        {new:true}
+        { new: true }
     ).select("-password");
 
     return res
-    .status(200)
-    .json(new ApiResponse(200,"Account details updates Succsessfully",user));
+        .status(200)
+        .json(new ApiResponse(200, "Account details updates Succsessfully", user));
 })
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatar.url) {
+        throw new ApiError(400, "Error While uploading on avatar");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        }, { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Avatar Updated Successfully")
+        )
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.file?.path;
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover Image file is missing");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if (!coverImage.url) {
+        throw new ApiError(400, "Error While uploading on cover Image");
+    }
+
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: coverImage.url
+            }
+        }, { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Cover Image Updated Successfully")
+        )
+});
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage
+};
 
 
 //Issue I faced
