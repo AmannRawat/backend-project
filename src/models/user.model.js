@@ -28,8 +28,15 @@ const userSchema = new Schema(
             type: String,   //Cloudinary URL
             required: true,
         },
+        avatarPublicId: {
+            type: String, // Cloudinary public_id
+            required: true,
+        },
         coverImage: {
             type: String,   //Cloudinary URL
+        },
+        coverImagePublicId: {
+            type: String,
         },
         watchHistory: [
             {
@@ -52,7 +59,7 @@ const userSchema = new Schema(
 //Middleware to hash password before saving user
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) {
-        return next();
+        return;
     }
     this.password = await bcrypt.hash(this.password, 10);
 })
