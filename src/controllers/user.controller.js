@@ -394,29 +394,45 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 foreignField: "subscriber",
                 as: "subscribedTo"
             }
-        },{
-            $addFields:{
-                subscribersCount:{
-                    $size:"$subscriber"
+        }, {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscriber"
                 },
-                channelsSubsribedToCount:{
-                    $size:"$subscribedTo"
+                channelsSubsribedToCount: {
+                    $size: "$subscribedTo"
                 },
-                isSubscribed:{
-                    $cond:{
-                        if:{$in: [req.user?._id,"$subscribers.subscriber"]},
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
                         then: true,
                         else: false
                     }
                 }
             }
-        },{
-            $project:{
-                fullName:1,
-                userName:','
+        }, {
+            $project: {   //Projection is used to include or exclude fields from the result set. 1 for include and 0 for exclude
+                fullName: 1,
+                userName: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1, //Why 1? why not 2 3 4 5? Bcz its a boolean value where 1 means include and 0 means exclude so if we want to include email we put 1 if we dont want to include email we put 0
+                subscribersCount: 1,
+                channelsSubsribedToCount: 1,
+                isSubscribed: 1
             }
         }
     ]);
+    // console.log("CHANNEL:", channel);
+    if (!channel || channel.length === 0) {
+        throw new ApiError(404, "Channel not found");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel[0], "Channel Profile Fetched Successfully")
+        );
 });
 export {
     registerUser,
