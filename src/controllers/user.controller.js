@@ -372,32 +372,39 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Username is required");
     }
 
-    // User.find({username}) //OR
+    // User.find({username}) 
 
+    //OR
     const channel = await User.aggregate([
-        {
-            $match: {
+        { //$match → WHERE in SQL
+            $match: { // Filtering Stage to match username 
                 userName: userName?.toLowerCase()
             }
         },
         {
-            $lookup: {
+            $lookup: { // Joining with subscriptions collection
                 from: "subscriptions", //lower case and plural
                 localField: "_id",
                 foreignField: "channel",
                 as: "subscribers"
             }
         }, {
-            $lookup: {
+            /* Explanation
+            In MongoDB aggregation:
+            Left side = the documents currently flowing in the pipeline
+            Right side = the collection you $lookup from (subscriptions)
+            $lookup is basically LEFT OUTER JOIN by default.
+            */
+            $lookup: { // Joining with subscriptions collection
                 from: "subscriptions", //lower case and plural model
                 localField: "_id",
                 foreignField: "subscriber",
                 as: "subscribedTo"
             }
         }, {
-            $addFields: {
+            $addFields: { // Adding new fields
                 subscribersCount: {
-                    $size: "$subscriber"
+                    $size: "$subscribers" //$ means field name
                 },
                 channelsSubsribedToCount: {
                     $size: "$subscribedTo"
@@ -410,7 +417,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                     }
                 }
             }
-        }, {
+        }, { //$project → SELECT specific columns
             $project: {   //Projection is used to include or exclude fields from the result set. 1 for include and 0 for exclude
                 fullName: 1,
                 userName: 1,
@@ -434,6 +441,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             new ApiResponse(200, channel[0], "Channel Profile Fetched Successfully")
         );
 });
+
 export {
     registerUser,
     loginUser,

@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import asyncHandler from "../utils/asyncHandler";
 
 const SubscriptionSchema = new Schema(
     {
