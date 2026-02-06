@@ -442,6 +442,18 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         );
 });
 
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User,aggregate(
+        [
+            {
+                $match:{
+                    _id: new mongoose.Types.ObjectId(req.user._id)   //cant write req.user._id directly cause it is string on mongo db 
+                }
+            }
+        ]
+    )
+});
+
 export {
     registerUser,
     loginUser,
