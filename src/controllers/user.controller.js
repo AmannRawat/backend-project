@@ -443,11 +443,43 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = await User,aggregate(
+    const user = await User.aggregate(
         [
             {
-                $match:{
+                $match: {
                     _id: new mongoose.Types.ObjectId(req.user._id)   //cant write req.user._id directly cause it is string on mongo db 
+                }
+            }, {
+                $lookup: {
+                    from: "videos",
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: "watchHistory",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "owner",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            fullName: 1,
+                                            userName: 1,
+                                            avatar: 1
+                                        }
+                                    }, {
+                                        $addFields: {
+                                            owner: {
+                                                $first: "$owner"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
                 }
             }
         ]
