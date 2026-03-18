@@ -91,7 +91,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
     const existingLike = await Like.findOne(
         {
-            comment : commentId,
+            comment: commentId,
             likedBy: userId
         }
     )
@@ -101,20 +101,51 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         isLiked = false;
     } else {
         await Like.create({
-            comment : commentId,
+            comment: commentId,
             likedBy: userId
         });
         isLiked = true;
     }
 
     return res.status(200).json(
-        new ApiResponse(200,isLiked,isLiked?"Comment Lked":"Comment Unliked")
+        new ApiResponse(200, isLiked, isLiked ? "Comment Liked" : "Comment Unliked")
     )
 })
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
-    //TODO: toggle like on tweet
+    const userId = req.user?._id
+
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Id not found")
+    }
+
+    const tweet = await Tweet.findById(tweetId)
+    if (!tweet) {
+        throw new ApiError(404, "Tweet Not found")
+    }
+
+    const existingLike = await Like.findOne(
+        {
+            tweet: tweetId,
+            likedBy: userId
+        }
+    )
+    let isLiked;
+    if (existingLike) {
+        await Like.findByIdAndDelete(existingLike._id)
+        isLiked = false;
+    } else {
+        await Like.create({
+            tweet: tweetId,
+            likedBy: userId
+        })
+        isLiked = true;
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, isLiked, isLiked ? "Tweet Liked" : "Tweet Unliked")
+    )
 }
 )
 
