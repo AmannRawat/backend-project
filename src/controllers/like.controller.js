@@ -69,12 +69,47 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
 })
 
 /* Algorithm
-1:
+1: Get requred data
+2: Validate Data
+3: Check if comment exist or not
+3: Check if Like already exist on comment or not 
+4: Perform task toggling accordingly
+5: Send Response
 */
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const { commentId } = req.params
-    //TODO: toggle like on comment
+    const userId = req.user?._id;
 
+    if (!isValidObjectId(commentId)) {
+        throw new ApiError(400, "Comment Id Invalid")
+    }
+
+    const comment = await Comments.findById(commentId)
+    if (!comment) {
+        throw new ApiError(404, "Comment not found")
+    }
+
+    const existingLike = await Like.findOne(
+        {
+            comment : commentId,
+            likedBy: userId
+        }
+    )
+    let isLiked;
+    if (existingLike) {
+        await Like.findByIdAndDelete(existingLike._id);
+        isLiked = false;
+    } else {
+        await Like.create({
+            comment : commentId,
+            likedBy: userId
+        });
+        isLiked = true;
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,isLiked,isLiked?"Comment Lked":"Comment Unliked")
+    )
 })
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
