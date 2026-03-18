@@ -148,10 +148,34 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     )
 }
 )
-
+/*
+ Algorithm
+    1: Get required data
+    2: Query Like collection
+    3: Populate video details
+    4: Extract only videos
+    5: Send Reponse
+*/
 const getLikedVideos = asyncHandler(async (req, res) => {
-    //TODO: get all liked videos
-})
+    const userId = req.user?._id;
+
+    // Find all likes for this user that have video
+    const likedVideos = await Like.find({
+        likedBy: userId,
+        video: { $ne: null } // only video likes
+    }).populate("video");
+
+    // Extract only video objects
+    const videos = likedVideos.map(like => like.video);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            videos,
+            "Liked videos fetched successfully"
+        )
+    );
+});
 
 export {
     toggleCommentLike,
