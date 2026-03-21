@@ -22,7 +22,7 @@ Step 6: (Optional but strong) Pagination
 Step 7: Send response
 */
 const getVideoComments = asyncHandler(async (req, res) => {
-    //TODO: get all comments for a video
+    
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query
 
